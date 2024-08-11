@@ -38,8 +38,8 @@ openai_client = OpenAI()
 
 
 # vectorstore = PineconeVectorStore(index_name="serenity-sphere", embedding=embeddings)
-# index_name = 'serenity-sphere'
-# namespace = 'inspiration'
+index_name = 'serenity-sphere'
+namespace = 'inspiration'
 
 # vectorstore_from_texts = PineconeVectorStore.from_texts([f"Source: {t.metadata['source']}, Title: {t.metadata['title']} \n\nContent: {t.page_content}" for t in texts], embeddings, index_name=index_name, namespace=namespace)
 
