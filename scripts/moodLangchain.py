@@ -22,36 +22,29 @@ embed_model = "text-embedding-3-small"
 openai_client = OpenAI()
 
 
-tokenizer = tiktoken.get_encoding('p50k_base')
+# tokenizer = tiktoken.get_encoding('p50k_base')
 
-def tiktoken_len(text):
-    tokens = tokenizer.encode(text, disallowed_special=())
-    return len(tokens)
+# def tiktoken_len(text):
+#     tokens = tokenizer.encode(text, disallowed_special=())
+#     return len(tokens)
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=100, length_function=tiktoken_len, separators=["\n\n", "\n", " ", ""])
-
-def get_embedding(text, model="text-embedding-3-small"):
-    # Call the OpenAI API to get the embedding for the text
-    response = openai_client.embeddings.create(input=text, model=model)
-    return response.data[0].embedding
-
+# text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=100, length_function=tiktoken_len, separators=["\n\n", "\n", " ", ""])
 
 # all youtube links in notes document
-loader = YoutubeLoader.from_youtube_url("https://youtu.be/S8jWFcDGz4Y?si=jJ0HMpGkV3CL-49O", add_video_info=True)
-data = loader.load()
-texts = text_splitter.split_documents(data)
+# loader = YoutubeLoader.from_youtube_url("https://youtu.be/S8jWFcDGz4Y?si=jJ0HMpGkV3CL-49O", add_video_info=True)
+# data = loader.load()
+# texts = text_splitter.split_documents(data)
 
 
-vectorstore = PineconeVectorStore(index_name="serenity-sphere", embedding=embeddings)
+# vectorstore = PineconeVectorStore(index_name="serenity-sphere", embedding=embeddings)
 index_name = 'serenity-sphere'
 namespace = 'emotional'
 
-vectorstore_from_texts = PineconeVectorStore.from_texts([f"Source: {t.metadata['source']}, Title: {t.metadata['title']} \n\nContent: {t.page_content}" for t in texts], embeddings, index_name=index_name, namespace=namespace)
+# vectorstore_from_texts = PineconeVectorStore.from_texts([f"Source: {t.metadata['source']}, Title: {t.metadata['title']} \n\nContent: {t.page_content}" for t in texts], embeddings, index_name=index_name, namespace=namespace)
 
 pc = Pinecone(api_key= pinecone_api_key)
 
 pinecone_index = pc.Index("serenity-sphere")
-
 
 
 def perform_rag_mood(query):
@@ -72,7 +65,9 @@ def perform_rag_mood(query):
     augmented_query = "<CONTEXT>\n" + "\n\n-------\n\n".join(contexts[ : 10]) + "\n-------\n</CONTEXT>\n\n\n\nMY QUESTION:\n" + query
 
     # Modify the prompt below as need to improve the response quality
-    system_prompt = f"""You are an AI assistant specialized in mood tracking and emotional support within SerenitySphere. Your primary goals are to help users understand and manage their emotions by providing insights, advice, and resources tailored to their mood patterns. Your responsibilities include:
+    system_prompt = f"""Adhere by the following guidelines to get the desired results for every query:
+    
+    You are an AI assistant specialized in mood tracking and emotional support within SerenitySphere. Your primary goals are to help users understand and manage their emotions by providing insights, advice, and resources tailored to their mood patterns. Your responsibilities include:
 
     Mood Logging: Encourage users to log their moods regularly and provide an intuitive interface for entering and updating their emotional states.
 
@@ -85,6 +80,10 @@ def perform_rag_mood(query):
     Confidentiality Assurance: Ensure users that their mood logs are kept confidential and are used solely for their personal development and emotional insight.
 
     Maintain a compassionate and empathetic tone, reassuring users that understanding and managing their emotions is a key step toward enhanced well-being. Encourage ongoing engagement with the platform for continued emotional support and growth.
+
+    Only return the desired output that the user should see, no object, no JSON, simply a message. 
+    
+    The message should have no styling and be plain text, no bold, no itylics, just plain text. Do not use markdown and templates that include '**' or '###'.
     """
 
     res = openai_client.chat.completions.create(
@@ -93,7 +92,10 @@ def perform_rag_mood(query):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": augmented_query}
         ],
-        # stream=True
+        stream=True, # enable streaming to get intermediate results
     )
 
-    return res.choices[0].message.content
+    for chunk in res:
+        content = chunk.choices[0].delta.content
+        if content:
+            yield content

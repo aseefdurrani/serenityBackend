@@ -22,18 +22,18 @@ embed_model = "text-embedding-3-small"
 openai_client = OpenAI()
 
 
-tokenizer = tiktoken.get_encoding('p50k_base')
+# tokenizer = tiktoken.get_encoding('p50k_base')
 
-def tiktoken_len(text):
-    tokens = tokenizer.encode(text, disallowed_special=())
-    return len(tokens)
+# def tiktoken_len(text):
+#     tokens = tokenizer.encode(text, disallowed_special=())
+#     return len(tokens)
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=100, length_function=tiktoken_len, separators=["\n\n", "\n", " ", ""])
+# text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=100, length_function=tiktoken_len, separators=["\n\n", "\n", " ", ""])
 
-def get_embedding(text, model="text-embedding-3-small"):
-    # Call the OpenAI API to get the embedding for the text
-    response = openai_client.embeddings.create(input=text, model=model)
-    return response.data[0].embedding
+# def get_embedding(text, model="text-embedding-3-small"):
+#     # Call the OpenAI API to get the embedding for the text
+#     response = openai_client.embeddings.create(input=text, model=model)
+#     return response.data[0].embedding
 
 # def cosine_similarity_between_words(sentence1, sentence2):
 #     # Get embeddings for both words
@@ -52,16 +52,16 @@ def get_embedding(text, model="text-embedding-3-small"):
 #     return similarity[0][0]
 
 # all youtube links in notes document
-loader = YoutubeLoader.from_youtube_url("https://youtu.be/2tM1LFFxeKg?si=zBmjd_yuoeEwJpti", add_video_info=True)
-data = loader.load()
-texts = text_splitter.split_documents(data)
+# loader = YoutubeLoader.from_youtube_url("https://youtu.be/2tM1LFFxeKg?si=zBmjd_yuoeEwJpti", add_video_info=True)
+# data = loader.load()
+# texts = text_splitter.split_documents(data)
 
 
-vectorstore = PineconeVectorStore(index_name="serenity-sphere", embedding=embeddings)
+# vectorstore = PineconeVectorStore(index_name="serenity-sphere", embedding=embeddings)
 index_name = 'serenity-sphere'
 namespace = 'fitness'
 
-vectorstore_from_texts = PineconeVectorStore.from_texts([f"Source: {t.metadata['source']}, Title: {t.metadata['title']} \n\nContent: {t.page_content}" for t in texts], embeddings, index_name=index_name, namespace=namespace)
+# vectorstore_from_texts = PineconeVectorStore.from_texts([f"Source: {t.metadata['source']}, Title: {t.metadata['title']} \n\nContent: {t.page_content}" for t in texts], embeddings, index_name=index_name, namespace=namespace)
 
 pc = Pinecone(api_key= pinecone_api_key)
 
@@ -89,7 +89,9 @@ def perform_rag_fitness(query):
     augmented_query = "<CONTEXT>\n" + "\n\n-------\n\n".join(contexts[ : 10]) + "\n-------\n</CONTEXT>\n\n\n\nMY QUESTION:\n" + query
 
     # Modify the prompt below as need to improve the response quality
-    system_prompt = f"""You are an AI fitness coach within SerenitySphere, tasked with helping users achieve their fitness goals through personalized workout plans and motivational support. Your primary goals are to create effective exercise routines, provide guidance, and keep users motivated on their fitness journey. Your responsibilities include:
+    system_prompt = f"""Adhere by the following guidelines to get the desired results for every query:
+    
+    You are an AI fitness coach within SerenitySphere, tasked with helping users achieve their fitness goals through personalized workout plans and motivational support. Your primary goals are to create effective exercise routines, provide guidance, and keep users motivated on their fitness journey. Your responsibilities include:
 
     Custom Workout Plans: Design personalized workout routines based on user goals, fitness levels, and preferences, updating plans as users progress.
 
@@ -102,6 +104,10 @@ def perform_rag_fitness(query):
     Health and Wellness Education: Share articles and resources about nutrition, recovery, and overall wellness to complement users' fitness efforts.
 
     Maintain an enthusiastic and supportive tone, encouraging users to embrace their fitness journey with confidence and commitment.
+
+    Only return the desired output that the user should see, no object, no JSON, simply a message. 
+    
+    The message should have no styling and be plain text, no bold, no itylics, just plain text. Do not use markdown and templates that include '**' or '###'.
     """
 
     res = openai_client.chat.completions.create(
@@ -110,10 +116,13 @@ def perform_rag_fitness(query):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": augmented_query}
         ],
-        # stream=True
+        stream=True, # enable streaming to get intermediate results
     )
 
-    return res.choices[0].message.content
+    for chunk in res:
+        content = chunk.choices[0].delta.content
+        if content:
+            yield content
 
 # ans = perform_rag("What is the video about?")
 
