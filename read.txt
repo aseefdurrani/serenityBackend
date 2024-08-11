@@ -1,0 +1,8 @@
+source venv/bin/activate ---> this start the virtual env on ur laptop
+
+python3 server.py ---> should get the server up and running
+
+make sure you install all the requirements from requirement.txt first
+
+run the frontend server in different terminal while this one is running 
+everythging should work
