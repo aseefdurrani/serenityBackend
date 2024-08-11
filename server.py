@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from scripts.fitnessLangchain import perform_rag_fitness
 from scripts.inspirationLangchain import perform_rag_inspiration
@@ -19,18 +19,29 @@ def return_fitness():
     query = data[-1].get('query', '') if isinstance(data, list) and data else ''
 
     print('here is the query:', query)
+    def generate():
+        try:
+            for chunk in perform_rag_fitness(query):
+                yield chunk
 
-    try:
-        response = perform_rag_fitness(query)  # Get the response using the custom function
-        # print('Response:', response)  # Print the response for debugging 
-        return jsonify (
-            {'response': response}  # Return the response as JSON
-        )
-    except Exception as e:
-        print('Error:', str(e))  # Print the error message for debugging purposes
-        return jsonify (
-            {'error': str(e)}  # Return the error message as JSON
-        ), 500  # Return a 500 Internal Server Error status code
+                # print('chunk:', chunk)
+        except Exception as e:
+            yield jsonify ({'error': str(e)}), 500  # Return the error message as JSON
+    
+    return Response(generate(), content_type='application/json')
+
+    # OLD METHOD:
+
+    #     response = perform_rag_fitness(query, data)  # Get the response using the custom function
+    #     # print('Response:', response)  # Print the response for debugging 
+    #     return jsonify (
+    #         {'response': response}  # Return the response as JSON
+    #     )
+    # except Exception as e:
+    #     print('Error:', str(e))  # Print the error message for debugging purposes
+    #     return jsonify (
+    #         {'error': str(e)}  # Return the error message as JSON
+    #     ), 500  # Return a 500 Internal Server Error status code
     
 @app.route('/api/inspiration', methods=['POST'])
 def return_inspiration():
@@ -42,17 +53,16 @@ def return_inspiration():
 
     print('here is the query:', query)
 
-    try:
-        response = perform_rag_inspiration(query)  # Get the response using the custom function
-        # print('Response:', response)  # Print the response for debugging 
-        return jsonify (
-            {'response': response}  # Return the response as JSON
-        )
-    except Exception as e:
-        print('Error:', str(e))  # Print the error message for debugging purposes
-        return jsonify (
-            {'error': str(e)}  # Return the error message as JSON
-        ), 500  # Return a 500 Internal Server Error status code
+    def generate():
+        try:
+            for chunk in perform_rag_inspiration(query):
+                yield chunk
+
+                # print('chunk:', chunk)
+        except Exception as e:
+            yield jsonify ({'error': str(e)}), 500  # Return the error message as JSON
+    
+    return Response(generate(), content_type='application/json')
 
 @app.route('/api/journal', methods=['POST'])
 def return_journal():
@@ -64,17 +74,16 @@ def return_journal():
 
     print('here is the query:', query)
 
-    try:
-        response = perform_rag_journal(query)  # Get the response using the custom function
-        # print('Response:', response)  # Print the response for debugging 
-        return jsonify (
-            {'response': response}  # Return the response as JSON
-        )
-    except Exception as e:
-        print('Error:', str(e))  # Print the error message for debugging purposes
-        return jsonify (
-            {'error': str(e)}  # Return the error message as JSON
-        ), 500  # Return a 500 Internal Server Error status code
+    def generate():
+        try:
+            for chunk in perform_rag_journal(query):
+                yield chunk
+
+                # print('chunk:', chunk)
+        except Exception as e:
+            yield jsonify ({'error': str(e)}), 500  # Return the error message as JSON
+    
+    return Response(generate(), content_type='application/json')
     
 
 ## Shouldnt need support route as of now
@@ -111,17 +120,16 @@ def return_mindfulness():
 
     print('here is the query:', query)
 
-    try:
-        response = perform_rag_mindful(query)  # Get the response using the custom function
-        # print('Response:', response)  # Print the response for debugging 
-        return jsonify (
-            {'response': response}  # Return the response as JSON
-        )
-    except Exception as e:
-        print('Error:', str(e))  # Print the error message for debugging purposes
-        return jsonify (
-            {'error': str(e)}  # Return the error message as JSON
-        ), 500  # Return a 500 Internal Server Error status code
+    def generate():
+        try:
+            for chunk in perform_rag_mindful(query):
+                yield chunk
+
+                # print('chunk:', chunk)
+        except Exception as e:
+            yield jsonify ({'error': str(e)}), 500  # Return the error message as JSON
+    
+    return Response(generate(), content_type='application/json')
     
 @app.route('/api/mood', methods=['POST'])
 def return_mood():
@@ -133,17 +141,16 @@ def return_mood():
 
     print('here is the query:', query)
 
-    try:
-        response = perform_rag_mood(query)  # Get the response using the custom function
-        # print('Response:', response)  # Print the response for debugging 
-        return jsonify (
-            {'response': response}  # Return the response as JSON
-        )
-    except Exception as e:
-        print('Error:', str(e))  # Print the error message for debugging purposes
-        return jsonify (
-            {'error': str(e)}  # Return the error message as JSON
-        ), 500  # Return a 500 Internal Server Error status code
+    def generate():
+        try:
+            for chunk in perform_rag_mood(query):
+                yield chunk
+
+                # print('chunk:', chunk)
+        except Exception as e:
+            yield jsonify ({'error': str(e)}), 500  # Return the error message as JSON
+    
+    return Response(generate(), content_type='application/json')
     
 
 
