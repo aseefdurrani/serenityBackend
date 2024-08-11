@@ -79,7 +79,7 @@ def perform_rag_fitness(query):
 
     # print(" ******    Query Embedding:   ******* ", query_embedding)
 
-    top_matches = pinecone_index.query(vector=query_embedding, top_k=10, include_metadata=True, namespace=namespace)
+    top_matches = pinecone_index.query(vector=query_embedding, top_k=10, include_metadata=True, namespace=namespace) 
 
     # print(" ***** Top Matches: ***** ", top_matches)
 
@@ -105,7 +105,7 @@ def perform_rag_fitness(query):
     """
 
     res = openai_client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": augmented_query}
