@@ -185,4 +185,4 @@ def hello_world():
     return jsonify({'message': 'helloworld'})  # Return "helloworld" as JSON
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8080) # remove debug=True in production
+    app.run() # remove debug=True in production
