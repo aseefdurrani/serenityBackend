@@ -86,6 +86,8 @@ def perform_rag_mindful(query):
     Only return the desired output that the user should see, no object, no JSON, simply a message. 
     
     The message should have no styling and be plain text, no bold, no itylics, just plain text. Do not use markdown and templates that include '**' or '###'.
+    
+    Keep a human touch in the message, make it sound like a human wrote it, not a robot.
     """
 
     res = openai_client.chat.completions.create(

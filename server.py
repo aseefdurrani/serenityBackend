@@ -5,6 +5,7 @@ from scripts.inspirationLangchain import perform_rag_inspiration
 from scripts.journalLangchain import perform_rag_journal
 from scripts.mindfulLangchain import perform_rag_mindful
 from scripts.moodLangchain import perform_rag_mood
+from scripts.liveSupLangchain import perform_rag_support
 
 # app instance 
 app = Flask(__name__)
@@ -109,6 +110,29 @@ def return_journal():
 #         return jsonify (
 #             {'error': str(e)}  # Return the error message as JSON
 #         ), 500  # Return a 500 Internal Server Error status code
+
+@app.route('/api/liveSupport', methods=['POST'])
+def return_support():
+    data = request.get_json()
+    # print('****** Data: ****** ', data)  # Print the data for debugging
+
+    # Assuming the query is the last item in the list
+    query = data[-1].get('query', '') if isinstance(data, list) and data else ''
+
+    print('here is the query:', query)
+
+    def generate():
+        try:
+            for chunk in perform_rag_support(query):
+                yield chunk
+
+                # print('chunk:', chunk)
+        except Exception as e:
+            yield jsonify ({'error': str(e)}), 500  # Return the error message as JSON
+    
+    return Response(generate(), content_type='application/json')
+
+
     
 @app.route('/api/mindfulness', methods=['POST'])
 def return_mindfulness():
